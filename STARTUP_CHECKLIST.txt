@@ -1,0 +1,352 @@
+================================================================================
+                    MALL-TINY APPLICATION STARTUP CHECKLIST
+                          Java 17 Compatibility Verification
+================================================================================
+
+SECTION 1: PRE-STARTUP ENVIRONMENT SETUP
+================================================================================
+
+Environment Requirements:
+  [ ] Java 17 installed and available
+  [ ] Maven 3.6+ installed
+  [ ] MySQL 5.7+ running on localhost:3306
+  [ ] Redis running on localhost:6379 (optional but recommended)
+  [ ] Port 8080 available (not in use by another process)
+
+Java Environment Verification:
+  Run: java -version
+  Expected Output: openjdk version "17.x.x" or java version "17.x.x"
+  [ ] Java 17 confirmed as active
+
+  Run: echo $JAVA_HOME
+  Expected Output: Path to Java 17 installation
+  [ ] JAVA_HOME correctly set to Java 17
+
+  Run: mvn --version
+  Expected Output: Maven 3.6+
+  [ ] Maven available and working
+
+Database Preparation:
+  [ ] MySQL server is running
+    Command: mysql -uroot -proot -e "SELECT 1"
+    Expected: Query successful
+  
+  [ ] mall_tiny database exists
+    Command: mysql -uroot -proot -e "USE mall_tiny; SHOW TABLES;"
+    Expected: List of tables (admin, menu, etc.)
+  
+  [ ] Database tables initialized
+    If not, run: mysql -uroot -proot mall_tiny < ./sql/[init-file].sql
+
+Redis Preparation (Optional):
+  [ ] Redis server running
+    Command: redis-cli ping
+    Expected: PONG
+  
+  Note: If Redis unavailable, application may fail. If not available,
+        comment out Redis configuration in application-dev.yml
+
+Network Port Verification:
+  [ ] Port 8080 is available
+    Command: lsof -i :8080
+    Expected: No output (port is free)
+    
+    If port is in use, either:
+    - Kill the process: kill -9 <PID>
+    - Use different port: --server.port=8081
+
+Project Preparation:
+  [ ] Current directory is project root
+    Command: pwd
+    Expected: Path ending in /mall-tiny
+    
+  [ ] pom.xml exists
+    Command: ls pom.xml
+    Expected: pom.xml (file exists)
+  
+  [ ] All source files present
+    Command: ls src/main/java/com/macro/mall/tiny/MallTinyApplication.java
+    Expected: File exists
+
+================================================================================
+SECTION 2: BUILD VERIFICATION
+================================================================================
+
+Clean Previous Build:
+  [ ] Remove old build artifacts
+    Command: mvn clean
+    Expected: BUILD SUCCESS
+
+Verify Maven Configuration:
+  [ ] Check Java version in pom.xml
+    Expected: <java.version>17</java.version>
+  
+  [ ] Verify spring-boot-starter-parent version
+    Expected: 2.7.5
+
+Build Application:
+  [ ] Execute Maven build
+    Command: mvn clean package -DskipTests
+    Expected: BUILD SUCCESS message
+    Time Expected: 1-3 minutes depending on system
+  
+  [ ] Verify JAR file created
+    Command: ls -lh target/mall-tiny-1.0.0-SNAPSHOT.jar
+    Expected: File exists and size > 50MB
+
+================================================================================
+SECTION 3: STARTUP EXECUTION
+================================================================================
+
+Choose One Startup Method:
+
+METHOD A: Using Maven (RECOMMENDED FOR VERIFICATION)
+  [ ] Execute: mvn spring-boot:run
+  [ ] Wait for application to fully start
+  [ ] Expected time: 20-30 seconds
+  [ ] Watch logs for "Started MallTinyApplication" message
+
+METHOD B: Using Executable JAR
+  [ ] Execute: java -jar target/mall-tiny-1.0.0-SNAPSHOT.jar
+  [ ] Wait for application to fully start
+  [ ] Expected time: 20-30 seconds
+  [ ] Watch logs for "Started MallTinyApplication" message
+
+METHOD C: Using IDE
+  [ ] Open project in IntelliJ IDEA or Eclipse
+  [ ] Configure Run Configuration to use Java 17 JDK
+  [ ] Run MallTinyApplication main class
+  [ ] Monitor Console tab for startup logs
+
+METHOD D: Using Automated Script
+  [ ] Make script executable: chmod +x verify-startup.sh
+  [ ] Run script: ./verify-startup.sh
+  [ ] Script will perform complete verification automatically
+
+================================================================================
+SECTION 4: STARTUP LOG MONITORING (WATCH FOR THESE IN LOGS)
+================================================================================
+
+CRITICAL SUCCESS INDICATORS (Must appear):
+  [ ] Java version confirmation
+      Look for: "Java HotSpot(TM) 64-Bit Server VM" or similar
+      Look for: Version number starting with 17
+  
+  [ ] Spring Boot startup message
+      Look for: "Starting MallTinyApplication v1.0.0-SNAPSHOT"
+  
+  [ ] Spring context initialization
+      Look for: "Initializing Spring embedded WebApplicationContext"
+      Look for: "Root WebApplicationContext: initialization started"
+      Look for: "Root WebApplicationContext: initialization completed"
+  
+  [ ] Bean instantiation messages
+      Look for: Multiple "Creating shared instance of singleton bean" entries
+  
+  [ ] Database connection pool
+      Look for: Druid or connection pool initialization messages
+      Look for: "dataSource" bean creation
+  
+  [ ] Tomcat startup
+      Look for: "Tomcat started on port(s): 8080 (http)"
+  
+  [ ] Final success message
+      Look for: "Started MallTinyApplication in X.XXX seconds"
+
+CRITICAL ERROR INDICATORS (Must NOT appear):
+  [ ] Java version errors
+      ❌ Do NOT see: "UnsupportedClassVersionError"
+      ❌ Do NOT see: "ClassFormatError"
+      ❌ Do NOT see: "Unsupported major.minor version"
+  
+  [ ] Module system errors
+      ❌ Do NOT see: "LayerInstantiationException"
+      ❌ Do NOT see: "FindException"
+      ❌ Do NOT see: "InvalidModuleNameException"
+  
+  [ ] Unhandled reflection errors
+      ❌ Do NOT see unhandled: "Illegal reflective access"
+      ❌ Do NOT see: "--add-opens" suggestions
+      Note: Properly suppressed warnings in SwaggerConfig are OK
+  
+  [ ] Bean creation errors
+      ❌ Do NOT see: "InitializationException"
+      ❌ Do NOT see: "BeanCreationException"
+      ❌ Do NOT see: "NoSuchBeanDefinitionException"
+  
+  [ ] Database connection errors
+      ❌ Do NOT see: "Connection refused"
+      ❌ Do NOT see: "Communication link failure"
+      ❌ Do NOT see: "No suitable driver found"
+  
+  [ ] Startup timeout errors
+      ❌ Do NOT see: Startup taking > 60 seconds
+      ❌ Do NOT see: Timeout exceptions
+
+LOG MONITORING HINTS:
+  - Startup typically takes 20-30 seconds
+  - Look for patterns indicating successful progression
+  - First 5 seconds: JVM startup
+  - 5-15 seconds: Spring beans and components
+  - 15-20 seconds: Tomcat server
+  - 20-30 seconds: Final initialization
+
+================================================================================
+SECTION 5: POST-STARTUP VERIFICATION
+================================================================================
+
+Verify Application Responsiveness:
+
+Health Check:
+  [ ] Test health endpoint
+    Command: curl -s http://localhost:8080/actuator/health | jq .
+    Expected Response: {"status":"UP"} or similar
+    If fails: Application not ready, check logs
+
+Swagger/API Documentation:
+  [ ] Access Swagger UI
+    Command: curl -s http://localhost:8080/swagger-ui/ | head -20
+    Expected: HTML response starting with Swagger UI
+    Alternative: Open browser to http://localhost:8080/swagger-ui/
+
+Database Connectivity:
+  [ ] Check database status (if API available)
+    Command: Look for successful database operations in logs
+    Expected: No database errors in logs
+
+Monitor Resource Usage:
+  [ ] Check Java process memory
+    Command: ps aux | grep java
+    Expected: JVM using 500-800 MB RAM is normal
+  
+  [ ] Check CPU usage
+    Command: top (watch java process)
+    Expected: CPU stable after initialization (0-5%)
+
+================================================================================
+SECTION 6: DOCUMENTATION & RESULTS
+================================================================================
+
+Record Startup Metrics:
+
+Startup Time:
+  From "Starting MallTinyApplication" to "Started MallTinyApplication"
+  Measured Time: _______ seconds (expected: 20-30 seconds)
+
+Memory Usage:
+  At startup: _______ MB
+  After stabilization: _______ MB (expected: 500-800 MB)
+
+CPU Usage:
+  Peak during startup: _______ %
+  Idle after startup: _______ % (expected: 0-5%)
+
+Errors/Warnings:
+  Total errors: _______ (expected: 0)
+  Total warnings: _______ (expected: only properly suppressed ones)
+
+Database Connections:
+  Connection pool size: _______ (expected: 10 initial, 30 max)
+  Active connections: _______ (expected: 1-5)
+
+Performance Assessment:
+  [ ] Startup time acceptable (< 60 seconds)
+  [ ] Memory usage within limits (< 1 GB)
+  [ ] No unexpected errors
+  [ ] Application responsive
+  [ ] Ready for API testing
+
+================================================================================
+SECTION 7: TROUBLESHOOTING
+================================================================================
+
+PROBLEM: "Unsupported major.minor version 61"
+  Solution: Verify Java 17 is active
+  - Command: java -version (must show 17.x.x)
+  - Fix: export JAVA_HOME=/path/to/java17
+  - Re-run: mvn clean package
+
+PROBLEM: "Connection refused" (MySQL)
+  Solution: Start MySQL server
+  - macOS: brew services start mysql
+  - Linux: sudo service mysql start
+  - Docker: docker run -d -p 3306:3306 mysql:8.0
+
+PROBLEM: "Cannot get a connection" (Redis)
+  Solution: Start Redis or configure to skip
+  - macOS: brew services start redis
+  - Linux: sudo service redis-server start
+  - Docker: docker run -d -p 6379:6379 redis:latest
+  - OR disable Redis in application-dev.yml
+
+PROBLEM: "Address already in use: bind"
+  Solution: Use different port
+  - Command: mvn spring-boot:run -Dspring-boot.run.arguments="--server.port=8081"
+  - OR kill process using 8080: lsof -i :8080, then kill -9 <PID>
+
+PROBLEM: "No such file or directory" (SQL scripts)
+  Solution: Execute from project root directory
+  - Command: pwd (should show ...mall-tiny)
+  - If not correct: cd /path/to/mall-tiny
+
+PROBLEM: Slow startup (> 60 seconds)
+  Solution: Check system resources
+  - Increase JVM heap: mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Xmx1024M"
+  - Check disk I/O: iostat 1
+  - Check memory: free -m (should have > 1 GB available)
+
+================================================================================
+SECTION 8: FINAL VERIFICATION SUMMARY
+================================================================================
+
+Application Successfully Started When ALL of the following are true:
+
+STARTUP VERIFICATION:
+  [ ] Java 17 is the active runtime
+  [ ] Maven build completes successfully
+  [ ] No Java version-related errors
+  [ ] No compilation errors
+
+SPRING CONTEXT:
+  [ ] Spring context initializes fully
+  [ ] No BeanCreationException
+  [ ] No InitializationException
+  [ ] All @Component/@Service/@Repository beans created
+
+DATABASE:
+  [ ] Druid connection pool created
+  [ ] Database connections established
+  [ ] No connection refused errors
+  [ ] MyBatis Plus mappers initialized
+
+JAVA 9+ COMPATIBILITY:
+  [ ] No module system errors
+  [ ] No FindException or similar
+  [ ] Flat classpath working correctly
+  [ ] No JPMS violations
+
+REFLECTION & SECURITY:
+  [ ] SwaggerConfig reflection properly suppressed
+  [ ] No unhandled illegal access warnings
+  [ ] Security manager not triggered
+  [ ] Spring Security initialized
+
+APPLICATION READY:
+  [ ] "Started MallTinyApplication" message appears
+  [ ] Tomcat listening on port 8080
+  [ ] HTTP requests can be made
+  [ ] Health endpoint responds with UP status
+  [ ] No errors during startup
+
+================================================================================
+SUCCESS! Application is Java 17 Compatible and Ready for Testing
+================================================================================
+
+Next Task: Test Core API Functionality with Java 17 (Task #7)
+
+For detailed information, see:
+- STARTUP_VERIFICATION.md (comprehensive guide)
+- STARTUP_VERIFICATION_REPORT.md (detailed report)
+- STARTUP_CHECKLIST.txt (this file, quick reference)
+
+================================================================================

@@ -10,6 +10,8 @@ import com.baomidou.mybatisplus.generator.config.querys.MySqlQuery;
 import com.baomidou.mybatisplus.generator.config.rules.DateType;
 import com.baomidou.mybatisplus.generator.config.rules.NamingStrategy;
 import com.baomidou.mybatisplus.generator.engine.VelocityTemplateEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Scanner;
@@ -19,6 +21,7 @@ import java.util.Scanner;
  * Created by macro on 2020/8/20.
  */
 public class MyBatisPlusGenerator {
+    private static final Logger logger = LoggerFactory.getLogger(MyBatisPlusGenerator.class);
 
     public static void main(String[] args) {
         String projectPath = System.getProperty("user.dir");
@@ -39,7 +42,7 @@ public class MyBatisPlusGenerator {
      */
     private static String scanner(String tip) {
         Scanner scanner = new Scanner(System.in);
-        System.out.println(("请输入" + tip + "："));
+        logger.info("请输入" + tip + "：");
         if (scanner.hasNext()) {
             String next = scanner.next();
             if (StrUtil.isNotEmpty(next)) {
